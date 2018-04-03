@@ -1,0 +1,14 @@
+shvn_host=192.168.2.102
+
+frontend_prod=192.168.2.105
+frontend_staging=192.168.2.106
+frontend_dev=192.168.2.107
+
+backend_prod=192.168.2.101
+backend_staging=192.168.2.103
+backend_dev=192.168.2.104
+
+database1_prod=192.168.2.110
+database2_prod=192.168.2.120
+database_staging=192.168.2.111
+database_dev=192.168.2.112
