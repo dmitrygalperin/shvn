@@ -1,4 +1,8 @@
-shvn_host=192.168.2.102
+user=produ
+
+#shvn_host=192.168.2.102
+shvn_host=localhost
+shvnDir=/home/produ/repos
 
 frontend_prod=192.168.2.105
 frontend_staging=192.168.2.106
