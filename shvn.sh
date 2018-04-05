@@ -15,7 +15,21 @@ load_shvn_file() {
 }
 
 update_shvn_file() {
-  printf "repo=${repo}\nversion=${version}\n" > .shvn
+	printf "repo=${repo}\nversion=${version}\n" > .shvn
+}
+
+update_remote_shvn_file() {
+	ssh ${user}@${shvn_host} "printf head=%s $1 > ${shvnDir}/${2}/.shvn"
+}
+
+load_remote_shvn_file() {
+	scp ${user}@${shvn_host}:${shvnDir}/${1}/.shvn /tmp/.shvn
+	source /tmp/.shvn
+	if [ -z ${head+x} ]
+	then
+		printf "${red}Not an shvn repository: $1${end}\n"
+		exit 1
+	fi
 }
 
 init() {
@@ -27,6 +41,7 @@ init() {
     fi
     printf "Initializing new repository with name ${dirName}\n"
     ssh ${user}@${shvn_host} "mkdir ${shvnDir}/${dirName}"
+	update_remote_shvn_file -1 ${dirName}
     printf "Creating .shvn file\n"
     printf "repo=${dirName}\nversion=-1\n" > .shvn
     printf "${grn}Successfully created new repository ${dirName}${end}\n"     
@@ -45,12 +60,26 @@ push() {
     printf "Packaging local version\n"
     version=$((version+1))
     update_shvn_file
+	update_remote_shvn_file ${version} ${repo}
     tar -czf /tmp/${version}.tar.gz .
     printf "Pushing to remote\n"
     scp /tmp/${version}.tar.gz ${user}@${shvn_host}:${shvnDir}/${repo}
     printf "${grn}Successfully pushed version ${version} to remote${end}\n"
 }
 
+clone() {
+	load_remote_shvn_file $1
+	if [ -d ./$1 ]
+	then
+		printf "${red}Directory ${1} already exists.${end}\n"
+		exit 1
+	fi
+    printf "Cloning ${1}\n"
+	mkdir $1
+	scp ${user}@${shvn_host}:${shvnDir}/${1}/${head}.tar.gz /tmp
+	tar -xzf /tmp/${head}.tar.gz -C ./$1
+	printf "${grn}Successfully cloned repository ${1}${end}\n"
+}
 ctype=$1
 arg=$2
 
@@ -59,11 +88,14 @@ case $ctype in
         init ${arg}
         ;;
     destroy)
-        destroy ${arg}
+        destroy
         ;;
     push)
         push
         ;;
+	clone)
+		clone ${arg}
+		;;
     *)
         printf "${red}Unknown argument: ${ctype}${end}\n"
 esac
