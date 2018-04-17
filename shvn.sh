@@ -80,6 +80,25 @@ clone() {
 	tar -xzf /tmp/${head}.tar.gz -C ./$1
 	printf "${grn}Successfully cloned repository ${1}${end}\n"
 }
+
+deploy() {
+	case $1 in
+		staging)
+			declare -a ips=($frontend_staging $backend_staging $database_staging)
+			;;
+		prod)
+			declare -a ips=($frontend_prod $backend_prod $database_prod1 $database_prod2)
+			;;
+	esac
+	for ip in "${ips[@]}"
+	do
+		printf "${grn}Killing Python on ${ip}${end}\n"
+		ssh ${user}@${ip} "killall -9 python3; killall -9 python"
+		printf "${grn}Starting application server on ${ip}${end}\n"
+		ssh ${user}@${ip} "/home/produ/start.sh > /dev/null 2> /dev/null &"
+	done
+}
+
 ctype=$1
 arg=$2
 
@@ -95,6 +114,9 @@ case $ctype in
         ;;
 	clone)
 		clone ${arg}
+		;;
+	deploy)
+		deploy ${arg}
 		;;
     *)
         printf "${red}Unknown argument: ${ctype}${end}\n"
