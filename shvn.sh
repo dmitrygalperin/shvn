@@ -81,6 +81,20 @@ clone() {
 	printf "${grn}Successfully cloned repository ${1}${end}\n"
 }
 
+pull() {
+	load_shvn_file
+	load_remote_shvn_file $repo
+	if [ "$version" == "$head" ]
+	then
+		printf "${grn}Current version up to date with remote. No pull necessary.${end}\n"
+		exit 1
+	fi
+	printf "Pulling latest version\n"
+	scp ${user}@${shvn_host}:${shvnDir}/${repo}/${head}.tar.gz /tmp
+	tar -xzf /tmp/${head}.tar.gz -C .
+	printf "${grn}Successfully pulled version ${head}${end}\n"
+}
+
 deploy() {
 	case $1 in
 		staging)
@@ -112,6 +126,9 @@ case $ctype in
     push)
         push
         ;;
+	pull)
+		pull
+		;;
 	clone)
 		clone ${arg}
 		;;
