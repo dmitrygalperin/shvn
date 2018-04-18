@@ -107,10 +107,22 @@ deploy() {
 	for ip in "${ips[@]}"
 	do
 		printf "${grn}Killing Python on ${ip}${end}\n"
-		ssh ${user}@${ip} "killall -9 python3; killall -9 python"
+		ssh ${user}@${ip} "killall -9 python3 > /dev/null 2> /dev/null; killall -9 python > /dev/null 2> /dev/null"
+		printf "${grn}Pulling current project version on ${ip}${end}\n"
+		ssh ${user}@${ip} "cd /home/produ/it490; /home/produ/shvn/shvn.sh pull"
 		printf "${grn}Starting application server on ${ip}${end}\n"
 		ssh ${user}@${ip} "/home/produ/start.sh > /dev/null 2> /dev/null &"
 	done
+}
+
+rollback() {
+	load_shvn_file
+	load_remote_shvn_file $repo
+	version=$((version+1))
+	update_remote_shvn_file $version $repo
+	#scp ${user}@${shvn_host}:${shvnDir}/${repo}/${1}.tar.gz ${user}@${shvn_host}:${shvnDir}/${repo}/${version}.tar.gz
+	ssh ${user}@${shvn_host} "cp ${shvnDir}/${repo}/${1}.tar.gz ${shvnDir}/${repo}/${version}.tar.gz"
+	pull
 }
 
 ctype=$1
@@ -128,6 +140,9 @@ case $ctype in
         ;;
 	pull)
 		pull
+		;;
+	rollback)
+		rollback ${arg}
 		;;
 	clone)
 		clone ${arg}
