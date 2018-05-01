@@ -119,10 +119,17 @@ rollback() {
 	load_shvn_file
 	load_remote_shvn_file $repo
 	version=$((version+1))
+	printf "${grn}Rolling back... Copying version ${1} to version ${version}${end}\n"
 	update_remote_shvn_file $version $repo
+	update_shvn_file
 	#scp ${user}@${shvn_host}:${shvnDir}/${repo}/${1}.tar.gz ${user}@${shvn_host}:${shvnDir}/${repo}/${version}.tar.gz
 	ssh ${user}@${shvn_host} "cp ${shvnDir}/${repo}/${1}.tar.gz ${shvnDir}/${repo}/${version}.tar.gz"
 	pull
+}
+
+status() {
+	load_shvn_file
+	printf "${grn}Current version is ${version}${end}\n"
 }
 
 ctype=$1
@@ -149,6 +156,9 @@ case $ctype in
 		;;
 	deploy)
 		deploy ${arg}
+		;;
+	status)
+		status
 		;;
     *)
         printf "${red}Unknown argument: ${ctype}${end}\n"
